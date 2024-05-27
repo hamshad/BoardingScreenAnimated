@@ -18,7 +18,7 @@ const Circle: React.FC<CircleProp> = ({onPress}): React.JSX.Element => {
   return (
     <View>
       <View>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={onPress}>
           <View>
             <AntDesign name="arrowright" size={30} color="#fff" />
           </View>
