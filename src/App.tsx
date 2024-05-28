@@ -26,6 +26,7 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 import Circle from './Circle';
 import CardRetroShadow from './CardRetroShadow';
+import CalenderCheck from './Calender/CalenderCheck';
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -36,7 +37,8 @@ function App(): React.JSX.Element {
     <SafeAreaView>
       <StatusBar hidden />
       {/* <Circle onPress={onPress} /> */}
-      <CardRetroShadow />
+      {/* <CardRetroShadow /> */}
+      <CalenderCheck />
     </SafeAreaView>
   );
 }
