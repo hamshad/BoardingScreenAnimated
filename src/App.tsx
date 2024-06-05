@@ -1,12 +1,5 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import React from 'react';
-import type {PropsWithChildren} from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -34,15 +27,15 @@ function App(): React.JSX.Element {
   const onPress = () => {};
 
   return (
-    <SafeAreaView>
-      <StatusBar hidden />
-      {/* <Circle onPress={onPress} /> */}
-      {/* <CardRetroShadow /> */}
-      <CalenderCheck />
-    </SafeAreaView>
+    <GestureHandlerRootView style={{flex: 1}}>
+      <SafeAreaView>
+        <StatusBar hidden />
+        {/* <Circle onPress={onPress} /> */}
+        <CardRetroShadow />
+        {/* <CalenderCheck /> */}
+      </SafeAreaView>
+    </GestureHandlerRootView>
   );
 }
-
-const styles = StyleSheet.create({});
 
 export default App;

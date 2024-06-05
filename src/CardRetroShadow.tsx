@@ -5,9 +5,20 @@ import {
   useColorScheme,
   StyleSheet,
   LayoutRectangle,
+  Animated as anim1,
   useWindowDimensions,
-  Animated,
+  Easing,
 } from 'react-native';
+import {Gesture, GestureDetector} from 'react-native-gesture-handler';
+import Animated, {
+  clamp,
+  Extrapolation,
+  interpolate,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 type CardRetroShadowProp = {
   [key: string]: any;
@@ -20,7 +31,69 @@ const CardRetroShadow: React.FC<CardRetroShadowProp> = (
   const {width, height} = useWindowDimensions();
   const isPortrait = height > width;
   const [CardPosition, setCardPosition] = useState<LayoutRectangle>();
-  const translate = React.useRef(new Animated.Value(width)).current;
+  const scale = useSharedValue(1);
+  const translationX = useSharedValue(0);
+  const translationY = useSharedValue(0);
+  const prevTranslationX = useSharedValue(0);
+  const prevTranslationY = useSharedValue(0);
+  const opacity = React.useRef(new anim1.Value(1)).current;
+  const gesturePan = Gesture.Pan()
+    .minDistance(1)
+    .onStart(() => {
+      prevTranslationX.value = translationX.value;
+      prevTranslationY.value = translationY.value;
+
+      anim1
+        .timing(opacity, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        })
+        .start();
+    })
+    .onUpdate(event => {
+      const maxTranslateX = width / 2;
+      const maxTranslateY = height / 2;
+
+      scale.value = withTiming(1.1, {duration: 200});
+      translationX.value = clamp(
+        prevTranslationX.value + event.translationX,
+        -maxTranslateX,
+        maxTranslateX,
+      );
+      translationY.value = clamp(
+        prevTranslationY.value + event.translationY,
+        -maxTranslateY,
+        maxTranslateY,
+      );
+    })
+    .onFinalize(() => {
+      scale.value = withTiming(1, {duration: 200});
+    })
+    .runOnJS(true);
+
+  const translate = useAnimatedStyle(() => ({
+    transform: [
+      {translateX: translationX.value},
+      {translateY: translationY.value},
+      {scale: scale.value},
+    ],
+    elevation: interpolate(
+      scale.value,
+      [1, 1.1],
+      [80, 120],
+      Extrapolation.CLAMP,
+    ),
+    backgroundColor: interpolateColor(
+      scale.value,
+      [1, 1.1],
+      ['#264653', '#2a9d8f'],
+    ),
+  }));
+
+  const textOpacity = useAnimatedStyle(() => ({
+    opacity: interpolate(scale.value, [1, 1.1], [0, 1]),
+  }));
 
   useEffect(() => {}, [0]);
 
@@ -30,7 +103,7 @@ const CardRetroShadow: React.FC<CardRetroShadowProp> = (
       : //? CardPosition.width / 2
         0;
     return (
-      <View
+      <anim1.View
         style={{
           position: 'absolute',
           //   top: CardPosition ? CardPosition.y + CardPosition.height / 4 : 0,
@@ -61,31 +134,52 @@ const CardRetroShadow: React.FC<CardRetroShadowProp> = (
             },
             {rotate: '45deg'},
           ],
+          opacity: opacity,
           backgroundColor: '#e76f51',
           borderRadius: 24,
-        }}></View>
+        }}></anim1.View>
     );
   }, [CardPosition]);
 
   return (
-    <View style={styles.cardContainer}>
-      <View
-        onResponderMove={event => {
-          console.log(event.nativeEvent);
-        }}
-        style={[
-          styles.card,
-          isPortrait ? {width: '80%'} : {height: '80%'},
-          {transform: [{translateX: 0}, {translateY: 0}]},
-        ]}
-        onLayout={event => {
-          console.log(event.nativeEvent.layout);
-          setCardPosition(event.nativeEvent.layout);
-        }}>
-        <Text style={styles.cardText}>Hello World</Text>
+    <GestureDetector gesture={gesturePan}>
+      <View style={styles.cardContainer}>
+        <Animated.View
+          onResponderMove={event => {
+            console.log(event.nativeEvent);
+          }}
+          style={[
+            styles.card,
+            isPortrait ? {width: '80%'} : {height: '80%'},
+            translate,
+          ]}
+          onLayout={event => {
+            console.log(event.nativeEvent.layout);
+            setCardPosition(event.nativeEvent.layout);
+          }}>
+          {/* <Text style={styles.cardText}>Hello World</Text> */}
+          <Animated.Text
+            style={[
+              textOpacity,
+              {
+                alignSelf: 'center',
+                fontSize: 220,
+                textAlign: 'center',
+              },
+            ]}>
+            🤡
+          </Animated.Text>
+          {/* <Animated.Image
+            style={[
+              textOpacity,
+              {
+                alignSelf: 'center',
+              },
+            ]}/> */}
+        </Animated.View>
+        <Shadow />
       </View>
-      <Shadow />
-    </View>
+    </GestureDetector>
   );
 };
 
